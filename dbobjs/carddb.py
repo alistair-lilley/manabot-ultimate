@@ -22,22 +22,26 @@ class CardDatabase:
             os.mkdir(DATA_DIR)
         if not os.path.isdir(self._db_dir):
             os.mkdir(self._db_dir)
-        self._cards = self.parse_db()
-        self._card_list = sorted([self._simplify_name(name) 
-                                  for name in self._cards.keys()])
+        self._cards = None
+        self._card_list = None
+        self.parse_db()
     
     def clear_cards(self):
         for f in os.listdir(self._db_dir):
             os.remove(os.path.join(self._db_dir, f))
 
     def parse_db(self):
+        print("loading card db")
         cards = {}
         full_db = [json.load(open(path.join(self._db_dir, card))) 
                    for card in os.listdir(self._db_dir)]
         for card_entry in full_db:
             card = Card(card_entry)
             cards[self._simplify_name(card.name)] = card
-        return cards
+        self._cards = cards
+        self._card_list = sorted([self._simplify_name(name) 
+                                  for name in self._cards.keys()])
+        print("card db loaded")
 
     def get_card(self, card_search):
         cardname = self._simplify_name(card_search)
