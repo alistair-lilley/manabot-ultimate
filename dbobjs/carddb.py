@@ -39,7 +39,7 @@ class CardDatabase:
             card = Card(card_entry)
             cards[self._simplify_name(card.name)] = card
         self._cards = cards
-        self._card_list = sorted([self._simplify_name(name) 
+        self._card_list = sorted([self._simplify_name(name)
                                   for name in self._cards.keys()])
         print("card db loaded")
 
@@ -54,8 +54,7 @@ class CardDatabase:
         for dbcard in self._card_list:
             similarity = eval(tgtcard, dbcard)
             if similarity < most_similar.similarity:
-                most_similar.card = dbcard
-                most_similar.similarity = similarity
+                most_similar = SimCard(dbcard, similarity)
         return most_similar.card
 
     def _retrieve(self, cardname):

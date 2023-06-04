@@ -121,6 +121,7 @@ class DBProxy:
             print("Updating")
             await self._update_db()
             self._write_updated()
+            print("\n")
             print("Updating done")
             return True
         print("Not updating")
