@@ -17,7 +17,6 @@ config = dotenv_values(".env")
 
 DCTOKEN = config["DCTOKEN"]
 TGTOKEN = config["TGTOKEN"]
-#ADMINS = config["ADMINS"]
 
 intents = discord.Intents.default()
 intents.messages = True

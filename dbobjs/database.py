@@ -25,9 +25,9 @@ class Database:
         return self._rulesdb.retrieve_rule(rulename)
     
     async def run_check_update(self):
-        #while True:
+        while True:
             updated = await self._dbproxy.loop_check_updates()
             if updated:
                 self._carddb.parse_db()
                 self._rulesdb.make_rules_tree()
-            #await asyncio.sleep(DAY)
+            await asyncio.sleep(DAY)
