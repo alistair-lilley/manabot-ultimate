@@ -18,8 +18,8 @@ class Database:
         self._rulesdb.clear_rules()
         self._carddb.clear_cards()
     
-    def retrieve_card(self, cardname):
-        return self._carddb.get_card(cardname)
+    def retrieve_card(self, cardname, tgdc):
+        return self._carddb.get_card(cardname, tgdc)
     
     def retrieve_rule(self, rulename):
         return self._rulesdb.retrieve_rule(rulename)

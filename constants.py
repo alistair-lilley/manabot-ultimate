@@ -12,6 +12,10 @@ class CardFields:
     TEXT = "oracle_text"
     IMAGE_URIS = "image_uris"
     LARGE = "large"
+    CARD_FACES = "card_faces"
+    OTHER_FACES = "other_faces"
+    FACES = "faces"
+    SET = "set"
     #ALL_PARTS = "all_parts" # not sure how to implement this
     COREFIELDS = [
         NAME,
@@ -30,6 +34,7 @@ class CardFields:
         TOUGHNESS: "Toughness:",
         LOYALTY: "Loyalty:",
         TEXT: "Text:",
+        OTHER_FACES: "Other Faces:",
     }
 
 # Database download fields
@@ -58,3 +63,9 @@ DAY = 24 * HOUR
 BULK_DATA_URL = "https://api.scryfall.com/bulk-data"
 RULES_URL = "https://media.wizards.com/" \
                 "%YR%/downloads/MagicCompRules%20%YR%%MO%%DAY%.txt"
+
+
+# other
+TELEGRAM_MSG = 1
+DISCORD_MSG = 2
+MKDN_CHARS = "_~`>#+-=|.![](){}"
