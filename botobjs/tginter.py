@@ -23,8 +23,8 @@ class TGInterface(Dispatcher, BaseBot):
             cards = [self._database.retrieve_card(card, TELEGRAM_MSG) 
                      for card in cardnames]
             for card in cards:
-                await message.answer(markdown.link(".", card.image), parse_mode="MarkdownV2")
-                await message.answer(card.text, parse_mode="MarkdownV2")
+                resp = '\n'.join([card.text, markdown.link(".", card.image)])
+                await message.answer(resp, parse_mode="MarkdownV2")
 
         elif message.text.startswith("!rule"):
             rule_query = message.text.split(' ', 1)[1:][0]
