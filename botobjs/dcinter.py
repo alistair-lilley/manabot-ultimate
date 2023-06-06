@@ -1,5 +1,7 @@
 import discord
 
+from constants import DISCORD_MSG
+
 from botobjs.basebot import BaseBot
 
 class DCInterface(discord.Client, BaseBot):
@@ -19,7 +21,8 @@ class DCInterface(discord.Client, BaseBot):
         
         elif "[[" in message.content and "]]" in message.content:
             cardnames = self._extract_cards(message.content)
-            cards = [self._database.retrieve_card(card) for card in cardnames]
+            cards = [self._database.retrieve_card(card, DISCORD_MSG) 
+                     for card in cardnames]
             for card in cards:
                 await message.channel.send(card.text)
                 await message.channel.send(card.image)

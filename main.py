@@ -27,7 +27,6 @@ if __name__=="__main__":
     database = Database(BULK_DATA_URL, RULES_URL)
     if args.clear:
         database.clear_data()
-    database = Database(BULK_DATA_URL, RULES_URL)
     dcbot = DCInterface(database, intents=intents)
     tgbot = TGInterface(TGTOKEN, database)
     loop = asyncio.new_event_loop()

@@ -1,6 +1,9 @@
 import hashlib
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.utils import markdown
+
+from constants import TELEGRAM_MSG
 
 from botobjs.basebot import BaseBot
 
@@ -17,10 +20,11 @@ class TGInterface(Dispatcher, BaseBot):
 
         if "[[" in message.text and "]]" in message.text:
             cardnames = self._extract_cards(message.text)
-            cards = [self._database.retrieve_card(card) for card in cardnames]
+            cards = [self._database.retrieve_card(card, TELEGRAM_MSG) 
+                     for card in cardnames]
             for card in cards:
-                await message.answer(card.image)
-                await message.answer(card.text)
+                await message.answer(markdown.link(".", card.image), parse_mode="MarkdownV2")
+                await message.answer(card.text, parse_mode="MarkdownV2")
 
         elif message.text.startswith("!rule"):
             rule_query = message.text.split(' ', 1)[1:][0]
@@ -29,18 +33,22 @@ class TGInterface(Dispatcher, BaseBot):
     
     async def on_inline(self, inline_query: types.InlineQuery):
         card = inline_query.query
-        full_card = self._database.retrieve_card(card)
-        image = types.InputTextMessageContent(full_card.image)
-        text = types.InputTextMessageContent(full_card.text)
+        full_card = self._database.retrieve_card(card, TELEGRAM_MSG)
+        image = types.InputTextMessageContent(markdown.link(".", 
+                                                            full_card.image), 
+            parse_mode="MarkdownV2")
+        text = types.InputTextMessageContent(full_card.text, 
+            parse_mode="MarkdownV2")
+        name = full_card.text.split('\n')[0]
         result_id: str = hashlib.md5(card.encode()).hexdigest()
         image_item = types.InlineQueryResultArticle(
             id=result_id,
-            title=f"Image link",
+            title=f"Link to {name}",
             input_message_content=image
         )
         text_item = types.InlineQueryResultArticle(
             id=result_id+"1",
-            title=f"Card text",
+            title=f"Text of {name}",
             input_message_content=text
         )
         await self._bot.answer_inline_query(inline_query.id,

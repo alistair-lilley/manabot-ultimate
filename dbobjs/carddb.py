@@ -37,17 +37,27 @@ class CardDatabase:
                    for card in os.listdir(self._db_dir)]
         for card_entry in full_db:
             card = Card(card_entry)
-            cards[self._simplify_name(card.name)] = card
+            if card.is_art_set:
+                continue
+            if card.is_multi_faced:
+                faces = [Card(face) for face in card.faces]
+                face_names = [face.name for face in faces]
+                for ff, face in enumerate(faces):
+                    face.other_faces = [face_names[ii] for ii, _ in 
+                                        enumerate(face_names) if ii != ff]
+                    cards[self._simplify_name(face.name)] = face
+            else:
+                cards[self._simplify_name(card.name)] = card
         self._cards = cards
         self._card_list = sorted([self._simplify_name(name)
                                   for name in self._cards.keys()])
         print("card db loaded")
 
-    def get_card(self, card_search):
+    def get_card(self, card_search, tgdc):
         cardname = self._simplify_name(card_search)
         if cardname not in self._cards:
             cardname = self._search_similar(cardname)
-        return self._retrieve(cardname)
+        return self._retrieve(cardname, tgdc)
 
     def _search_similar(self, tgtcard):
         most_similar = SimCard(None, INF)
@@ -57,10 +67,10 @@ class CardDatabase:
                 most_similar = SimCard(dbcard, similarity)
         return most_similar.card
 
-    def _retrieve(self, cardname):
+    def _retrieve(self, cardname, tgdc):
         card = self._cards[cardname]
         image = card.image_uri
-        text = card.formatted_data
+        text = card.formatted_data(tgdc)
         return CardResult(image, text)
 
     def _simplify_name(self, name):
