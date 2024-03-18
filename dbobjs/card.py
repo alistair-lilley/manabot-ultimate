@@ -1,79 +1,135 @@
+""" Card """
+from __future__ import annotations
+
+import logging  
+
+from typing import Dict, List, Any
+
 import re
 
-from constants import CardFields
-from constants import TELEGRAM_MSG, MKDN_CHARS
+from constants import Platform
+
+logger = logging.getLogger(__name__)
+
+ARTSETCODELENGTH = 4
+
+PRETTYFIELDS = {
+    "name": "Name:",
+    "mana_cost": "Cost:",
+    "type_line": "Type:",
+    "power": "Power:",
+    "toughness": "Toughness:",
+    "loyalty": "Loyalty:",
+    "oracle_text": "Text:",
+    "other_faces": "Other Faces:",
+}
+
+# These layouts aren't actually main cards, so we don't load them
+IGNORELAYOUT = [
+    "art_series",
+    "emblem",
+    "planar",
+    "token",
+    "double_faced_token",
+    "vanguard",
+    "scheme",
+    "reversible_card",
+]
+
+MULTIFACE = [
+    "transform",
+    "split",
+    "flip",
+    "adventure",
+    "modal_dfc",
+    "transform",
+]
+
+REQUIRED = [
+    "name",
+    "mana_cost",
+    "type",
+    "power",
+    "toughness",
+    "loyalty",
+    "text",
+]
+
+MKDN_CHARS = "_~`>#+-=|.![](){}"
+
 
 class Card:
-
-    def __init__(self, card_json_obj):
+    def __init__(self: Card, card_json_obj: Dict) -> None:
         self._json_obj = card_json_obj
-        self._multi_faced = False
         self._other_faces = None
-        self._card_data = self._parse_json()
-        self.image_uri = self._get_image_uri()
+        self.not_main_card = False
+        self._bolding = {
+            Platform.TELEGRAM: "*",
+            Platform.DISCORD: "**",
+        }
+        self._card_data = self.parse_json()
 
-    def _parse_json(self):
+    def parse_json(self: Card) -> Dict[str, Any]:
         fields = {}
-        if CardFields.CARD_FACES in self._json_obj:
-            fields[CardFields.FACES] = self._json_obj[CardFields.CARD_FACES]
-            self._multi_faced = True
+        if self._json_obj["layout"] in IGNORELAYOUT:
+            self.not_main_card = True
+            return None
+        elif self._json_obj["layout"] in MULTIFACE:
+            self._other_faces = self._json_obj["card_faces"]
         else:
-            for corefield in CardFields.COREFIELDS:
+            for corefield in REQUIRED:
                 if corefield in self._json_obj:
                     fields[corefield] = self._json_obj[corefield]
         return fields
-        
-    def _get_image_uri(self):
-        if self._multi_faced:
-            return "Multi faced"
-        if CardFields.IMAGE_URIS in self._json_obj:
-            return self._json_obj[CardFields.IMAGE_URIS][CardFields.LARGE]
+
+    def get_image_uri(self: Card) -> str:
+        try:
+            assert self._other_faces != None
+        except RuntimeError as e:
+            err = ("Card requested is a multiface card and should not be accessed. "
+                    "If this happened, something got FUCKED up.")
+            logger.critical(err)
+            raise e(err)
+        if "image_uris" in self._json_obj:
+            return self._json_obj["image_uris"]["large"]
         return "No URI found"
 
-    def _format(self, tgdc):
-        prettyfields = CardFields.PRETTYFIELDS
-        bolding = '*' if tgdc == TELEGRAM_MSG else '**'
-        for field in prettyfields:
-            prettyfields[field] = f'{bolding}{prettyfields[field]}{bolding}'
-        out_lines = [f"{prettyfields[field]} "
-                     f"{self._card_data[field]}" for field in self._card_data]
-        out_text = self._fix_formatting('\n'.join(out_lines)) \
-            if tgdc == TELEGRAM_MSG else '\n'.join(out_lines)
+    def formatted_data(self: Card, tgdc: Platform) -> str:
+        bold = self._bolding[tgdc]
+        for field in PRETTYFIELDS:
+            PRETTYFIELDS[field] = f"{bold}{PRETTYFIELDS[field]}{bold}"
+        out_lines = [
+            f"{PRETTYFIELDS[field]} {self._card_data[field]}"
+            for field in self._card_data
+        ]
+        out_text = (
+            self._fix_formatting("\n".join(out_lines))
+            if tgdc == Platform.TELEGRAM
+            else "\n".join(out_lines)
+        )
         return out_text
-    
-    def _is_art_set(self):
-        return len(self._json_obj[CardFields.SET]) == 4 \
-            and self._json_obj[CardFields.SET].startswith('a')
 
-    def formatted_data(self, tgdc):
-        return self._format(tgdc)
-    
-    def _fix_formatting(self, text):
+    def _fix_formatting(self: Card, text: str) -> str:
         for char in MKDN_CHARS:
             text = re.sub(re.escape(char), "\\" + re.escape(char), text)
         return text
-    
-    @property
-    def name(self):
-        return self._card_data[CardFields.NAME]
-    
-    @property
-    def is_multi_faced(self):
-        return self._multi_faced
-    
-    @property
-    def faces(self):
-        return self._card_data[CardFields.FACES]
-    
-    @property
-    def other_faces(self):
-        print(self._card_data[CardFields.OTHER_FACES])
-        return ', '.join(self._card_data[CardFields.OTHER_FACES])
-    
-    @other_faces.setter
-    def other_faces(self, names):
-        self._card_data[CardFields.OTHER_FACES] = ', '.join(names)
 
     @property
-    def is_art_set(self):
-        return self._is_art_set()
+    def name(self: Card) -> str:
+        return self._card_data["name"]
+
+    @property
+    def faces(self: Card) -> List[str]:
+        return self._other_faces
+    
+    @property
+    def image_uri(self: Card) -> str:
+        return self.get_image_uri()
+
+    @property
+    def other_faces(self: Card) -> str:
+        return ", ".join(self._card_data["other_faces"])
+
+    @other_faces.setter
+    def other_faces(self: Card, names: List[str]) -> None:
+        self._card_data["other_faces"] = names

@@ -6,8 +6,8 @@ from dbobjs.carddb import CardDatabase
 
 from constants import DAY
 
-class Database:
 
+class Database:
     def __init__(self, scryfall_url, rules_url):
         self._dbproxy = DBProxy(scryfall_url, rules_url)
         self._rulesdb = Rules()
@@ -17,13 +17,13 @@ class Database:
         self._dbproxy.clear_hash()
         self._rulesdb.clear_rules()
         self._carddb.clear_cards()
-    
+
     def retrieve_card(self, cardname, tgdc):
         return self._carddb.get_card(cardname, tgdc)
-    
+
     def retrieve_rule(self, rulename):
         return self._rulesdb.retrieve_rule(rulename)
-    
+
     async def run_check_update(self):
         while True:
             updated = await self._dbproxy.loop_check_updates()
