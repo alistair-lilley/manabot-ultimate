@@ -31,7 +31,7 @@ class CardDatabase:
     This object stores info about cards, including card objects and a list of card names
     It is used to retrieve cards from searches, primarily"""
 
-    def __init__(self: CardDatabase):
+    def __init__(self: CardDatabase) -> None:
         self._db_dir = os.path.join(DATA_DIR, CARD_DIR)
         if not os.path.isdir(DATA_DIR):
             os.mkdir(DATA_DIR)
@@ -43,12 +43,12 @@ class CardDatabase:
         self._card_list: List[str] = None
         self.parse_db()
 
-    def clear_card_database(self: CardDatabase):
+    def clear_card_database(self: CardDatabase) -> None:
         """Deletes the entire card database; generally used during testing"""
         for f in os.listdir(self._db_dir):
             os.remove(os.path.join(self._db_dir, f))
 
-    def parse_db(self: CardDatabase):
+    def parse_db(self: CardDatabase) -> None:
         """Parses all json files from the database into card objects
         and stores them in this object"""
         logger.info("Loading card database")
@@ -79,7 +79,7 @@ class CardDatabase:
         self._card_list = sorted([name for name in self._cards.keys()])
         logger.info("Card database loaded")
 
-    def get_card(self: CardDatabase, card_search: str, tgdc: Platform):
+    def get_card(self: CardDatabase, card_search: str, tgdc: Platform) -> CardResult:
         """Retrieves a single card by name, checking if its a sub-name and checkin for similar
         names if it is not found as a single card"""
         logger.info(f"Fetching card by query {card_search}")
@@ -91,16 +91,18 @@ class CardDatabase:
             matched_card = self._search_subname(cardname)
         if not matched_card:
             matched_card = self._search_similar(cardname)
-        else:
+        if not matched_card:
             matched_card = cardname
         return self._retrieve(matched_card, tgdc)
 
-    def _search_subname(self: CardDatabase, cardname: str):
+    def _search_subname(self: CardDatabase, cardname: str) -> str:
+        cnamelower = cardname.lower()
         for dbcard in self._card_list:
-            cnamelower = cardname.lower()
-            return re.match(f"^{cnamelower}", dbcard.lower()) != None
+            if re.match(f"^{cnamelower}", dbcard.lower()):
+                return dbcard.lower()
+        return None
 
-    def _search_similar(self: CardDatabase, tgtcard: str):
+    def _search_similar(self: CardDatabase, tgtcard: str) -> str:
         most_similar = SimCard(None, float("inf"))
         for dbcard in self._card_list:
             similarity = eval(tgtcard, dbcard)
@@ -108,11 +110,11 @@ class CardDatabase:
                 most_similar = SimCard(dbcard, similarity)
         return most_similar.card
 
-    def _retrieve(self: CardDatabase, cardname: str, tgdc: Platform):
+    def _retrieve(self: CardDatabase, cardname: str, tgdc: Platform) -> CardResult:
         card = self._cards[cardname]
         image = card.image_uri
         text = card.formatted_data(tgdc)
         return CardResult(image, text)
 
-    def _simplify_name(self: CardDatabase, name: str):
+    def _simplify_name(self: CardDatabase, name: str) -> str:
         return re.sub(r"[\W\s]", "", re.sub(r" ", "_", name)).lower()

@@ -11,7 +11,6 @@ CARD_DIR = "cards"
 RULES_FILE = "rules.txt"
 
 # Numeric values
-INF = x
 SECOND = 1
 MINUTE = 60 * SECOND
 HOUR = 60 * MINUTE
@@ -22,6 +21,3 @@ BULK_DATA_URL = "https://api.scryfall.com/bulk-data"
 RULES_URL = (
     "https://media.wizards.com/" "%YR%/downloads/MagicCompRules%20%YR%%MO%%DAY%.txt"
 )
-
-
-# other

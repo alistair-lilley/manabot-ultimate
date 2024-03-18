@@ -1,7 +1,8 @@
 """ Card """
+
 from __future__ import annotations
 
-import logging  
+import logging
 
 from typing import Dict, List, Any
 
@@ -52,7 +53,7 @@ REQUIRED = [
     "power",
     "toughness",
     "loyalty",
-    "text",
+    "oracle_text",
 ]
 
 MKDN_CHARS = "_~`>#+-=|.![](){}"
@@ -71,10 +72,15 @@ class Card:
 
     def parse_json(self: Card) -> Dict[str, Any]:
         fields = {}
-        if self._json_obj["layout"] in IGNORELAYOUT:
+        if (
+            self._json_obj["object"] == "card"
+            and self._json_obj["layout"] in IGNORELAYOUT
+        ):
             self.not_main_card = True
             return None
-        elif self._json_obj["layout"] in MULTIFACE:
+        elif (
+            self._json_obj["object"] == "card" and self._json_obj["layout"] in MULTIFACE
+        ):
             self._other_faces = self._json_obj["card_faces"]
         else:
             for corefield in REQUIRED:
@@ -84,10 +90,12 @@ class Card:
 
     def get_image_uri(self: Card) -> str:
         try:
-            assert self._other_faces != None
+            assert self._other_faces == None
         except RuntimeError as e:
-            err = ("Card requested is a multiface card and should not be accessed. "
-                    "If this happened, something got FUCKED up.")
+            err = (
+                "Card requested is a multiface card and should not be accessed. "
+                "If this happened, something got FUCKED up."
+            )
             logger.critical(err)
             raise e(err)
         if "image_uris" in self._json_obj:
@@ -121,7 +129,7 @@ class Card:
     @property
     def faces(self: Card) -> List[str]:
         return self._other_faces
-    
+
     @property
     def image_uri(self: Card) -> str:
         return self.get_image_uri()
