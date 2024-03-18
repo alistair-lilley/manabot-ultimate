@@ -1,56 +1,65 @@
+"""Telegram interface"""
+
+from __future__ import annotations
+
+import logging
+
+from typing import List
+
 import hashlib
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import markdown
 
-from constants import TELEGRAM_MSG
+from dbobjs import CardResult, Database
+
+from constants import Platform
 
 from botobjs.basebot import BaseBot
 
-class TGInterface(Dispatcher, BaseBot):
+logger = logging.getLogger(__name__)
 
-    def __init__(self, token, database):
-        self._bot = Bot(token)
-        super().__init__(self._bot)
+
+class TGInterface(Dispatcher, BaseBot):
+    def __init__(self, token: str, database: Database):
+        super().__init__()
+        self.bot = Bot(token)
         self._database = database
-        self.register_message_handler(self.on_message)
-        self.register_inline_handler(self.on_inline)
+        self.message.register(self.on_message)
+        self.inline_query.register(self.on_inline)
 
     async def on_message(self, message: types.Message):
-
+        logger.info(f"Got in chat request on telegram: {message.text}")
         if "[[" in message.text and "]]" in message.text:
             cardnames = self._extract_cards(message.text)
-            cards = [self._database.retrieve_card(card, TELEGRAM_MSG) 
-                     for card in cardnames]
+            cards: List[CardResult] = [
+                self._database.retrieve_card(card, Platform.TELEGRAM)
+                for card in cardnames
+            ]
             for card in cards:
-                resp = '\n'.join([card.text, markdown.link(".", card.image)])
-                await message.answer(resp, parse_mode="MarkdownV2")
+                await message.answer_photo(
+                    photo=card.image, caption=card.text, parse_mode="MarkdownV2"
+                )
 
-        elif message.text.startswith("!rule"):
-            rule_query = message.text.split(' ', 1)[1:][0]
-            rule = self._database.retrieve_rule(rule_query)
-            await message.answer(rule)
-    
+        # elif message.text.startswith("!rule"):
+        #     rule_query = message.text.split(" ", 1)[1:][0]
+        #     rule = self._database.retrieve_rule(rule_query)
+        #     await message.answer(rule)
+
     async def on_inline(self, inline_query: types.InlineQuery):
+        logger.info(f"Got inline request on telegram: {inline_query.query}")
         card = inline_query.query
-        full_card = self._database.retrieve_card(card, TELEGRAM_MSG)
-        image = types.InputTextMessageContent(markdown.link(".", 
-                                                            full_card.image), 
-            parse_mode="MarkdownV2")
-        text = types.InputTextMessageContent(full_card.text, 
-            parse_mode="MarkdownV2")
-        name = full_card.text.split('\n')[0]
+        full_card: CardResult = self._database.retrieve_card(card, Platform.TELEGRAM)
+        name = full_card.text.split("\n")[0]
         result_id: str = hashlib.md5(card.encode()).hexdigest()
-        image_item = types.InlineQueryResultArticle(
+        image_item = types.InlineQueryResultPhoto(
             id=result_id,
-            title=f"Link to {name}",
-            input_message_content=image
+            title=name,
+            photo_url=full_card.image,
+            thumbnail_url=full_card.image,
+            caption=full_card.text,
+            parse_mode="MarkdownV2",
         )
-        text_item = types.InlineQueryResultArticle(
-            id=result_id+"1",
-            title=f"Text of {name}",
-            input_message_content=text
+        await self.bot.answer_inline_query(
+            inline_query.id, results=[image_item], cache_time=1
         )
-        await self._bot.answer_inline_query(inline_query.id,
-                                             results=[image_item, text_item],
-                                               cache_time=1)

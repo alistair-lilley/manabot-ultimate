@@ -17,4 +17,4 @@ ipython_config.py
 data/
 
 # Testing
-*_test.py
+testing/
