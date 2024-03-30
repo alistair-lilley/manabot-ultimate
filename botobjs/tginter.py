@@ -37,6 +37,8 @@ class TGInterface(Dispatcher, BaseBot):
                 for card in cardnames
             ]
             for card in cards:
+                logger.info(f"{card}")
+            for card in cards:
                 await message.answer_photo(
                     photo=card.image, caption=card.text, parse_mode="MarkdownV2"
                 )

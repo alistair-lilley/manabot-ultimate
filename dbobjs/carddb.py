@@ -63,8 +63,14 @@ class CardDatabase:
             if card.not_main_card:
                 continue
             # We want to load the individual faces of a card, not the double-face-card object
-            if card.faces:
-                faces = [Card(face) for face in card.faces]
+            if card.faces or card.split_orientations:
+                if card.faces:
+                    faces = [Card(face) for face in card.faces]
+                elif card.split_orientations:
+                    faces = [
+                        Card({**orientation, "image_uris": card.fullface_image})
+                        for orientation in card.split_orientations
+                    ]
                 face_names = [face.name for face in faces]
                 for ff, face in enumerate(faces):
                     face.other_faces = [
@@ -93,6 +99,7 @@ class CardDatabase:
             matched_card = self._search_similar(cardname)
         if not matched_card:
             matched_card = cardname
+        logger.info(f"Retrieved card: {matched_card}")
         return self._retrieve(matched_card, tgdc)
 
     def _search_subname(self: CardDatabase, cardname: str) -> str:
