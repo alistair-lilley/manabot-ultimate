@@ -54,6 +54,7 @@ REQUIRED = [
     "toughness",
     "loyalty",
     "oracle_text",
+    "type_line"
 ]
 
 MKDN_CHARS = "_~`>#+-=|.![](){}"
@@ -104,10 +105,11 @@ class Card:
 
     def formatted_data(self: Card, tgdc: Platform) -> str:
         bold = self._bolding[tgdc]
-        for field in PRETTYFIELDS:
-            PRETTYFIELDS[field] = f"{bold}{PRETTYFIELDS[field]}{bold}"
+        fields_pretty = PRETTYFIELDS.copy()
+        for field in fields_pretty:
+            fields_pretty[field] = f"{bold}{fields_pretty[field]}{bold}"
         out_lines = [
-            f"{PRETTYFIELDS[field]} {self._card_data[field]}"
+            f"{fields_pretty[field]} {self._card_data[field]}"
             for field in self._card_data
         ]
         out_text = (
