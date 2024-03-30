@@ -23,6 +23,7 @@ PRETTYFIELDS = {
     "loyalty": "Loyalty:",
     "oracle_text": "Text:",
     "other_faces": "Other Faces:",
+    "layout": "Layout:",
 }
 
 # These layouts aren't actually main cards, so we don't load them
@@ -37,24 +38,26 @@ IGNORELAYOUT = [
     "reversible_card",
 ]
 
-MULTIFACE = [
+DOUBLEFACE = [
     "transform",
+    "modal_dfc",
+]
+
+SPLIT = [
+    "adventure",
     "split",
     "flip",
-    "adventure",
-    "modal_dfc",
-    "transform",
 ]
 
 REQUIRED = [
     "name",
     "mana_cost",
-    "type",
+    "type_line",
+    "oracle_text",
     "power",
     "toughness",
     "loyalty",
-    "oracle_text",
-    "type_line"
+    "layout",
 ]
 
 MKDN_CHARS = "_~`>#+-=|.![](){}"
@@ -64,6 +67,8 @@ class Card:
     def __init__(self: Card, card_json_obj: Dict) -> None:
         self._json_obj = card_json_obj
         self._other_faces = None
+        self._split_orientations = None
+        self._fullface_image = None
         self.not_main_card = False
         self._bolding = {
             Platform.TELEGRAM: "*",
@@ -72,17 +77,25 @@ class Card:
         self._card_data = self.parse_json()
 
     def parse_json(self: Card) -> Dict[str, Any]:
-        fields = {}
-        if (
-            self._json_obj["object"] == "card"
-            and self._json_obj["layout"] in IGNORELAYOUT
+        fields = None
+        # The cards with the "Card" type for their card type and dont have card faces
+        # aren't real cards and we wanna ignore them too
+        if self._json_obj["object"] == "card_face":
+            fields = {}
+        elif (
+            self._json_obj["layout"] in IGNORELAYOUT
+            or self._json_obj["type_line"] == "Card"
         ):
             self.not_main_card = True
-            return None
-        elif (
-            self._json_obj["object"] == "card" and self._json_obj["layout"] in MULTIFACE
-        ):
+        elif self._json_obj["layout"] in DOUBLEFACE:
             self._other_faces = self._json_obj["card_faces"]
+        elif self._json_obj["layout"] in SPLIT:
+            self._split_orientations = self._json_obj["card_faces"]
+            self._fullface_image = self._json_obj["image_uris"]
+        else:
+            fields = {}
+        if any([self._other_faces, self._split_orientations, self.not_main_card]):
+            pass
         else:
             for corefield in REQUIRED:
                 if corefield in self._json_obj:
@@ -100,7 +113,7 @@ class Card:
             logger.critical(err)
             raise e(err)
         if "image_uris" in self._json_obj:
-            return self._json_obj["image_uris"]["large"]
+            return self._json_obj["image_uris"]["png"]
         return "No URI found"
 
     def formatted_data(self: Card, tgdc: Platform) -> str:
@@ -131,6 +144,14 @@ class Card:
     @property
     def faces(self: Card) -> List[str]:
         return self._other_faces
+
+    @property
+    def split_orientations(self: Card) -> List[str]:
+        return self._split_orientations
+
+    @property
+    def fullface_image(self: Card) -> Dict[str, List[str]]:
+        return self._fullface_image
 
     @property
     def image_uri(self: Card) -> str:
