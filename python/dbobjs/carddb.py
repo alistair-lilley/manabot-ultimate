@@ -23,7 +23,7 @@ from constants import DATA_DIR, CARD_DIR, Platform
 logger = logging.getLogger(__name__)
 
 SimCard = namedtuple("SimilarCard", "card similarity")
-CardResult = namedtuple("CardResult", "image text")
+CardResult = namedtuple("CardResult", "image thumbnail text")
 
 
 class CardDatabase:
@@ -120,8 +120,9 @@ class CardDatabase:
     def _retrieve(self: CardDatabase, cardname: str, tgdc: Platform) -> CardResult:
         card = self._cards[cardname]
         image = card.image_uri
+        thumbnail = card.thumbnail_uri
         text = card.formatted_data(tgdc)
-        return CardResult(image, text)
+        return CardResult(image, thumbnail, text)
 
     def _simplify_name(self: CardDatabase, name: str) -> str:
         return re.sub(r"[\W\s]", "", re.sub(r" ", "_", name)).lower()

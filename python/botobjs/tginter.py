@@ -58,7 +58,7 @@ class TGInterface(Dispatcher, BaseBot):
             id=result_id,
             title=name,
             photo_url=full_card.image,
-            thumbnail_url=full_card.image,
+            thumbnail_url=full_card.thumbnail,
             caption=full_card.text,
             parse_mode="MarkdownV2",
         )

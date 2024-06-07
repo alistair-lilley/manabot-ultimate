@@ -56,7 +56,6 @@ REQUIRED = [
     "power",
     "toughness",
     "loyalty",
-    "layout",
 ]
 
 MKDN_CHARS = "_~`>#+-=|.![](){}"
@@ -101,7 +100,7 @@ class Card:
                     fields[corefield] = self._json_obj[corefield]
         return fields
 
-    def get_image_uri(self: Card) -> str:
+    def get_image_uri(self: Card, thumbnail: bool = False) -> str:
         try:
             assert self._other_faces == None
         except RuntimeError as e:
@@ -112,7 +111,9 @@ class Card:
             logger.critical(err)
             raise e(err)
         if "image_uris" in self._json_obj:
-            return self._json_obj["image_uris"]["png"]
+            if thumbnail:
+                return self._json_obj["image_uris"]["small"]
+            return self._json_obj["image_uris"]["large"]
         return "No URI found"
 
     def formatted_data(self: Card, tgdc: Platform) -> str:
@@ -155,6 +156,10 @@ class Card:
     @property
     def image_uri(self: Card) -> str:
         return self.get_image_uri()
+
+    @property
+    def thumbnail_uri(self: Card) -> str:
+        return self.get_image_uri(thumbnail=True)
 
     @property
     def other_faces(self: Card) -> str:
