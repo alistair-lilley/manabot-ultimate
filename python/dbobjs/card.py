@@ -23,7 +23,6 @@ PRETTYFIELDS = {
     "loyalty": "Loyalty:",
     "oracle_text": "Text:",
     "other_faces": "Other Faces:",
-    "layout": "Layout:",
 }
 
 # These layouts aren't actually main cards, so we don't load them
