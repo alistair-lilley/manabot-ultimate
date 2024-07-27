@@ -58,7 +58,7 @@ REQUIRED = [
     "loyalty",
 ]
 
-MKDN_CHARS = "_~`>#+-=|.![](){}"
+MKDN_CHARS = "_~`>#+-=|.![](){}*"
 
 
 class Card:
@@ -121,18 +121,15 @@ class Card:
         fields_pretty = PRETTYFIELDS.copy()
         for field in fields_pretty:
             fields_pretty[field] = f"{bold}{fields_pretty[field]}{bold}"
-        out_lines = [
-            f"{fields_pretty[field]} {self._card_data[field]}"
-            for field in self._card_data
+        data_fields = [
+            (fieldkey, self._escape_non_mkdn(field)) if tgdc == Platform.TELEGRAM else field
+            for fieldkey, field in self._card_data.items()
         ]
-        out_text = (
-            self._fix_formatting("\n".join(out_lines))
-            if tgdc == Platform.TELEGRAM
-            else "\n".join(out_lines)
-        )
+        out_lines = [f"{fields_pretty[fieldkey]} {field}" for fieldkey, field in data_fields]
+        out_text = "\n".join(out_lines)
         return out_text
 
-    def _fix_formatting(self: Card, text: str) -> str:
+    def _escape_non_mkdn(self: Card, text: str) -> str:
         for char in MKDN_CHARS:
             text = re.sub(re.escape(char), "\\" + re.escape(char), text)
         return text
