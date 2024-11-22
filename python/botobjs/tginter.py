@@ -33,8 +33,9 @@ class TGInterface(Dispatcher, BaseBot):
         if "[[" in message.text and "]]" in message.text:
             cardnames = self._extract_cards(message.text)
             cards: List[CardResult] = [
-                self._database.retrieve_card(card, Platform.TELEGRAM)
+                cardresult
                 for card in cardnames
+                for cardresult in self._database.retrieve_card(card, Platform.TELEGRAM)
             ]
             for card in cards:
                 logger.info(f"{card}")

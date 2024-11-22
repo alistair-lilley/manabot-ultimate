@@ -5,14 +5,19 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from dbobjs import DBProxy, CardDatabase, Card
+from dbobjs import DBProxy, CardDatabase
 from constants import Platform
+
+from typing import List, TYPE_CHECKING
 
 # from dbobjs.rulesdb import Rules
 
 from constants import DAY
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from carddb import CardResult
 
 MAXATTEMPT = 3
 
@@ -32,7 +37,7 @@ class Database:
         self._carddb.clear_card_database()
         # self._rulesdb.clear_rules()
 
-    def retrieve_card(self: Database, cardname: str, tgdc: Platform) -> Card:
+    def retrieve_card(self: Database, cardname: str, tgdc: Platform) -> List[CardResult]:
         """Retrieves a single card"""
         return self._carddb.get_card(cardname, tgdc)
 
