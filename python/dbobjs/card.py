@@ -159,6 +159,10 @@ class Card:
     @property
     def thumbnail_uri(self: Card) -> str:
         return self.get_image_uri(thumbnail=True)
+    
+    @property
+    def other_faces_list(self: Card) -> List[str]:
+        return self._card_data["other_faces"]
 
     @property
     def other_faces(self: Card) -> str:
