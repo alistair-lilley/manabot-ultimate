@@ -130,6 +130,8 @@ class Card:
         return out_text
 
     def _escape_non_mkdn(self: Card, text: str) -> str:
+        if isinstance(text, list):
+            text = ', '.join(text)
         for char in MKDN_CHARS:
             text = re.sub(re.escape(char), "\\" + re.escape(char), text)
         return text

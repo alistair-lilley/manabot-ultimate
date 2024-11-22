@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from dbobjs import DBProxy, CardDatabase, Card
 from constants import Platform
@@ -11,6 +12,9 @@ from constants import Platform
 
 from constants import DAY
 
+logger = logging.getLogger(__name__)
+
+MAXATTEMPT = 3
 
 class Database:
     """Database object"""
@@ -37,8 +41,17 @@ class Database:
 
     async def run_check_update(self: Database) -> None:
         """Loops and checks for updates every day"""
+        attempt = 0
         while True:
-            updated = await self._dbproxy.loop_check_updates()
+            try:
+                updated = await self._dbproxy.loop_check_updates()
+            except:
+                attempt += 1
+                logger.critical(f"Updating failed. Attempts: {attempt}/{MAXATTEMPT}") 
+                if attempt == MAXATTEMPT:
+                    logger.critical("Updating failed. Shutting down container.")
+                    import sys
+                    sys.exit()  
             if updated:
                 self._carddb.parse_db()
                 # self._rulesdb.make_rules_tree()
