@@ -119,6 +119,8 @@ class Card:
     def formatted_data(self: Card, tgdc: Platform) -> str:
         bold = self._bolding[tgdc]
         fields_pretty = PRETTYFIELDS.copy()
+        for fname, field in fields_pretty:
+            fields_pretty[fname] = ' '.join(field) if isinstance(field, list) else field
         for field in fields_pretty:
             fields_pretty[field] = f"{bold}{fields_pretty[field]}{bold}"
         data_fields = [
@@ -130,8 +132,6 @@ class Card:
         return out_text
 
     def _escape_non_mkdn(self: Card, text: str) -> str:
-        if isinstance(text, list):
-            text = ', '.join(text)
         for char in MKDN_CHARS:
             text = re.sub(re.escape(char), "\\" + re.escape(char), text)
         return text
