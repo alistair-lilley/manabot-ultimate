@@ -122,17 +122,32 @@ class Card:
         for field in fields_pretty:
             fields_pretty[field] = f"{bold}{fields_pretty[field]}{bold}"
         data_fields = [
-            (fieldkey, self._escape_non_mkdn(field)) if tgdc == Platform.TELEGRAM else field
+            (fieldkey, self._escape_non_mkdn(self._flatten_list(field)))
+            if tgdc == Platform.TELEGRAM
+            else (fieldkey, self._flatten_list(field))
             for fieldkey, field in self._card_data.items()
         ]
-        out_lines = [f"{fields_pretty[fieldkey]} {field}" for fieldkey, field in data_fields]
+        try:
+            out_lines = [
+                f"{fields_pretty[fieldkey]} {field}" for fieldkey, field in data_fields
+            ]
+        except:
+            import pdb; pdb.set_trace()
         out_text = "\n".join(out_lines)
         return out_text
 
     def _escape_non_mkdn(self: Card, text: str) -> str:
         for char in MKDN_CHARS:
-            text = re.sub(re.escape(char), "\\" + re.escape(char), text)
+            try:
+                text = re.sub(re.escape(char), "\\" + re.escape(char), text)
+            except:
+                import pdb; pdb.set_trace()
         return text
+    
+    def _flatten_list(self: Card, listortext: List | str) -> str:
+        if isinstance(listortext, list):
+            return ', '.join(listortext)
+        return listortext
 
     @property
     def name(self: Card) -> str:
@@ -160,7 +175,7 @@ class Card:
 
     @property
     def other_faces(self: Card) -> str:
-        return ", ".join(self._card_data["other_faces"])
+        return self._card_data.get("other_faces", None)
 
     @other_faces.setter
     def other_faces(self: Card, names: List[str]) -> None:

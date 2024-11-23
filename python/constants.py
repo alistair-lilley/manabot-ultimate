@@ -5,6 +5,7 @@ class Platform(Enum):
     TELEGRAM = 1
     DISCORD = 2
 
+
 # Paths and dirs
 DATA_DIR = "data"
 CARD_DIR = "cards"

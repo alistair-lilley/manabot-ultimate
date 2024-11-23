@@ -30,8 +30,9 @@ class DCInterface(discord.Client, BaseBot):
         elif "[[" in message.content and "]]" in message.content:
             cardnames = self._extract_cards(message.content)
             cards: List[CardResult] = [
-                self._database.retrieve_card(card, Platform.DISCORD)
+                cardobj
                 for card in cardnames
+                for cardobj in self._database.retrieve_card(card, Platform.DISCORD)
             ]
             for card in cards:
                 await message.channel.send(f"{card.image}\n{card.text}")

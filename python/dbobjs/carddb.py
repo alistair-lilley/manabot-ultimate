@@ -85,7 +85,12 @@ class CardDatabase:
         self._card_list = sorted([name for name in self._cards.keys()])
         logger.info("Card database loaded")
 
-    def get_card(self: CardDatabase, card_search: str, tgdc: Platform) -> CardResult:
+    def get_card(
+        self: CardDatabase,
+        card_search: str,
+        tgdc: Platform,
+        fetch_other_faces: bool = True,
+    ) -> List[CardResult]:
         """Retrieves a single card by name, checking if its a sub-name and checkin for similar
         names if it is not found as a single card"""
         logger.info(f"Fetching card by query {card_search}")
@@ -100,7 +105,7 @@ class CardDatabase:
         if not matched_card:
             matched_card = cardname
         logger.info(f"Retrieved card: {matched_card}")
-        return self._retrieve(matched_card, tgdc)
+        return self._retrieve(matched_card, tgdc, fetch_other_faces)
 
     def _search_subname(self: CardDatabase, cardname: str) -> str:
         cnamelower = cardname.lower()
@@ -117,12 +122,19 @@ class CardDatabase:
                 most_similar = SimCard(dbcard, similarity)
         return most_similar.card
 
-    def _retrieve(self: CardDatabase, cardname: str, tgdc: Platform) -> CardResult:
+    def _retrieve(
+        self: CardDatabase, cardname: str, tgdc: Platform, fetch_other_faces: bool
+    ) -> List[CardResult]:
+        results = []
         card = self._cards[cardname]
+        if card.other_faces and fetch_other_faces:
+            for face in card.other_faces:
+                results += self.get_card(face, tgdc, fetch_other_faces=False)
         image = card.image_uri
         thumbnail = card.thumbnail_uri
         text = card.formatted_data(tgdc)
-        return CardResult(image, thumbnail, text)
+        results.append(CardResult(image, thumbnail, text))
+        return results
 
     def _simplify_name(self: CardDatabase, name: str) -> str:
         return re.sub(r"[\W\s]", "", re.sub(r" ", "_", name)).lower()
