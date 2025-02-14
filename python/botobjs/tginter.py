@@ -37,6 +37,7 @@ class TGInterface(Dispatcher, BaseBot):
                 for card in cardnames
                 for cardobj in self._database.retrieve_card(card, Platform.TELEGRAM)
             ]
+            cards = cards[::-1]
             for card in cards:
                 logger.info(f"{card}")
             for card in cards:
@@ -52,17 +53,22 @@ class TGInterface(Dispatcher, BaseBot):
     async def on_inline(self, inline_query: types.InlineQuery):
         logger.info(f"Got inline request on telegram: {inline_query.query}")
         card = inline_query.query
-        full_card: CardResult = self._database.retrieve_card(card, Platform.TELEGRAM)
-        name = full_card.text.split("\n")[0]
+        full_cards: List[CardResult] = self._database.retrieve_card(card, Platform.TELEGRAM)
+        full_cards = full_cards[::-1]
+        name = full_cards[0].text.split("\n")[0]
         result_id: str = hashlib.md5(card.encode()).hexdigest()
-        image_item = types.InlineQueryResultPhoto(
-            id=result_id,
-            title=name,
-            photo_url=full_card.image,
-            thumbnail_url=full_card.thumbnail,
-            caption=full_card.text,
-            parse_mode="MarkdownV2",
-        )
+        image_items = list()
+        for ff, full_card in enumerate(full_cards):
+            image_items.append(
+                types.InlineQueryResultPhoto(
+                id=result_id+str(ff),
+                title=name,
+                photo_url=full_card.image,
+                thumbnail_url=full_card.thumbnail,
+                caption=full_card.text,
+                parse_mode="MarkdownV2",
+                )
+            )
         await self.bot.answer_inline_query(
-            inline_query.id, results=[image_item], cache_time=1
+            inline_query.id, results=image_items, cache_time=1
         )
